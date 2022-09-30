@@ -1,9 +1,9 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
@@ -11,16 +11,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-//Контроллер для класса User, ручная валидация
+//Контроллер для класса User, ручная валидация, кроме формата E-mail
 @RestController
-@Data
 public class UserController {
     private final List<User> users = new ArrayList<>();
     int currentId = 1;
     private static final Logger log = LoggerFactory.getLogger(UserController.class);
 
     @GetMapping("/users")
-    public List<User> findAll() {
+    public List<User> getAll() {
         log.debug("Текущее количество пользователей: " + users.size());
         return users;
     }
@@ -55,15 +54,19 @@ public class UserController {
         if (opt.isEmpty()) {
             user.setName(user.getLogin());
         }
-        if (user.getId() <=  0){
+        if (user.getId() <= 0) {
             throw new ValidationException("Ошибка валидации входных данных, проверьте параметры: id.");
-        } else if (!(isEmailEmpty || isLoginEmpty || isBirthdayCorrect) && users.get(user.getId()-1) != null) {
+        } else if (!(isEmailEmpty || isLoginEmpty || isBirthdayCorrect) && users.get(user.getId() - 1) != null) {
             log.debug("Обновлен пользователь: {}", user);
-            users.set(user.getId()-1, user);
+            users.set(user.getId() - 1, user);
             return user;
         } else {
             log.debug("Ошибка данных. Email: {}, Login: {}, Birthday: {}", user.getEmail(), user.getLogin(), user.getBirthday());
             throw new ValidationException("Ошибка валидации входных данных, проверьте параметры: Email, Login, Birthday.");
         }
+    }
+
+    public List<User> getUsers() {
+        return users;
     }
 }
