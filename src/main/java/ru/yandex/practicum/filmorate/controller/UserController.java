@@ -14,7 +14,7 @@ import java.util.List;
 @RestController
 public class UserController {
     private final List<User> users = new ArrayList<>();
-    int currentId = 1;
+    private int currentId = 1;
     private static final Logger log = LoggerFactory.getLogger(UserController.class);
 
     @GetMapping("/users")
