@@ -5,9 +5,6 @@ import javax.validation.ConstraintValidatorContext;
 import java.time.LocalDate;
 
 public class FilmReleaseDateValidator implements ConstraintValidator<ValidReleaseDate, LocalDate> {
-    public void initialize(ValidReleaseDate constraint) {
-    }
-
     @Override
     public boolean isValid(LocalDate value, ConstraintValidatorContext context) {
         if (value != null) {

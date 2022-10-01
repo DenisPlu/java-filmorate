@@ -13,7 +13,7 @@ import java.util.List;
 @RestController
 public class FilmController {
     private final List<Film> films = new ArrayList<>();
-    int currentId = 1;
+    private int currentId = 1;
     private static final Logger log = LoggerFactory.getLogger(FilmController.class);
 
     @GetMapping("/films")

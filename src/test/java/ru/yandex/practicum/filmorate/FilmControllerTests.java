@@ -18,11 +18,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
 class FilmControllerTests {
-
-    @Test
-    void contestLoads() {
-    }
-
     FilmController filmController;
 
     @BeforeEach
