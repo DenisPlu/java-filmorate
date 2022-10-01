@@ -5,11 +5,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.validator.UserManualValidator;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 //Контроллер для класса User, ручная валидация
 @RestController
@@ -26,14 +25,7 @@ public class UserController {
 
     @PostMapping(value = "/users")
     public User create(@RequestBody User user) throws ValidationException {
-        boolean isEmailEmpty = user.getEmail().equals("") || !user.getEmail().contains("@");
-        boolean isLoginEmpty = user.getLogin().equals("") || user.getLogin().contains(" ");
-        boolean isBirthdayCorrect = user.getBirthday().isAfter(LocalDate.now());
-        Optional<String> optionalEmail = Optional.ofNullable(user.getName());
-        if (optionalEmail.isEmpty() || optionalEmail.get().equals("")) {
-            user.setName(user.getLogin());
-        }
-        if (!(isEmailEmpty || isLoginEmpty || isBirthdayCorrect)) {
+        if (UserManualValidator.isValid(user)) {
             log.debug("Добавлен пользователь: {}", user);
             user.setId(currentId);
             users.add(user);
@@ -47,16 +39,9 @@ public class UserController {
 
     @PutMapping(value = "/users")
     public User update(@RequestBody User user) throws ValidationException {
-        boolean isEmailEmpty = user.getEmail().equals("") || !user.getEmail().contains("@");
-        boolean isLoginEmpty = user.getLogin().equals("") || user.getLogin().contains(" ");
-        boolean isBirthdayCorrect = user.getBirthday().isAfter(LocalDate.now());
-        Optional<String> opt = Optional.ofNullable(user.getName());
-        if (opt.isEmpty()) {
-            user.setName(user.getLogin());
-        }
         if (user.getId() <= 0) {
             throw new ValidationException("Ошибка валидации входных данных, проверьте параметры: id.");
-        } else if (!(isEmailEmpty || isLoginEmpty || isBirthdayCorrect) && users.get(user.getId() - 1) != null) {
+        } else if (UserManualValidator.isValid(user) && users.get(user.getId() - 1) != null) {
             log.debug("Обновлен пользователь: {}", user);
             users.set(user.getId() - 1, user);
             return user;
