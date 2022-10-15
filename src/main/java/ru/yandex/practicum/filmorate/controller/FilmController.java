@@ -1,48 +1,78 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.service.UserService;
 
 import javax.validation.Valid;
-import java.util.ArrayList;
 import java.util.List;
 
-//Контроллер для класса Film, валидация с помощью spring-boot-starter-validation
 @RestController
+@Component
+@RequiredArgsConstructor
 public class FilmController {
-    private final List<Film> films = new ArrayList<>();
-    private int currentId = 1;
+    private final FilmService filmService;
+    private final UserService userService;
     private static final Logger log = LoggerFactory.getLogger(FilmController.class);
 
     @GetMapping("/films")
     public List<Film> getAll() {
-        log.debug("Текущее количество фильмов: " + films.size());
-        return films;
+        return filmService.getInMemoryFilmStorage().getAll();
+    }
+
+    @GetMapping("/films/{id}")
+    public Film getFilmById(@PathVariable final int id) {
+        if (id > filmService.getInMemoryFilmStorage().getAll().size()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Заданного фильма не существует");
+        } else {
+            return filmService.getInMemoryFilmStorage().getAll().get(id - 1);
+        }
+    }
+
+    @GetMapping("/films/popular")
+    public List<Film> getFilmWithBestLikes(@RequestParam (defaultValue = "10") final int count) {
+        return filmService.getFilmsWithBestLikes(count);
     }
 
     @PostMapping(value = "/films")
     public Film create(@RequestBody @Valid Film film) {
             log.debug("Добавлен фильм: {}", film);
-            film.setId(currentId);
-            films.add(film);
-            this.currentId++;
+            filmService.getInMemoryFilmStorage().create(film);
             return film;
     }
 
     @PutMapping(value = "/films")
     public Film update(@RequestBody @Valid Film film) {
             log.debug("Обновлен фильм: {}", film);
-            if (films.size() >= film.getId()){
-                films.set(film.getId()-1, film);
-                return film;
-            } else {
-                return null;
-            }
+            filmService.getInMemoryFilmStorage().update(film);
+            return film;
     }
 
-    public List<Film> getFilms() {
-        return films;
+    @PutMapping(value = "/films/{id}/like/{userId}")
+    public int addLikeToFilm(@PathVariable final int id, @PathVariable final int userId) {
+        log.debug("Добавлен лайк фильма c Id: {}, пользователем с Id: {}", id, userId);
+        return filmService.addLike(id-1, userId-1);
+    }
+
+    @DeleteMapping(value = "/films/{id}/like/{userId}")
+    public int deleteLikeFromFilm(@PathVariable final int id, @PathVariable final int userId) {
+        if (userId < 0 || userId > userService.getInMemoryUserStorage().getAll().size()){
+            System.out.println(userService.getInMemoryUserStorage().getAll().size());
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Заданного пользователя не существует");
+        } else {
+            log.debug("Удален лайк у фильма c Id: {}, пользователя с Id: {}", id, userId);
+            return filmService.removeLike(id - 1, userId - 1);
+        }
+    }
+
+    public FilmService getFilmService() {
+        return filmService;
     }
 }
