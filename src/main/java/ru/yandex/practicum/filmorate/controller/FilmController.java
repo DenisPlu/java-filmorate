@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -13,9 +12,9 @@ import ru.yandex.practicum.filmorate.service.UserService;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
-@Component
 @RequiredArgsConstructor
 public class FilmController {
     private final FilmService filmService;
@@ -29,13 +28,12 @@ public class FilmController {
 
     @GetMapping("/films/{id}")
     public Film getFilmById(@PathVariable final int id) {
-        if (id > filmService.getInMemoryFilmStorage().getAll().size()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Заданного фильма не существует");
-        } else {
-            return filmService.getInMemoryFilmStorage().getAll().get(id - 1);
+        try{
+            return Optional.ofNullable(filmService.getInMemoryFilmStorage().getAll().get(id - 1)).get();
+        } catch (RuntimeException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Заданного фильма не существует", e);
         }
     }
-
     @GetMapping("/films/popular")
     public List<Film> getFilmWithBestLikes(@RequestParam (defaultValue = "10") final int count) {
         return filmService.getFilmsWithBestLikes(count);

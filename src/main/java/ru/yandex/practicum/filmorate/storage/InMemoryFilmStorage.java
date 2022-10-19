@@ -40,7 +40,7 @@ public class InMemoryFilmStorage implements FilmStorage{
     @Override
     public Film update(Film film) {
         if (films.size() >= film.getId()){
-            if (Optional.ofNullable(film.getLikes()).isPresent()){              //дублирование!!!
+            if (Optional.ofNullable(film.getLikes()).isPresent()){
                 film.setLikesNumber(film.getLikes().size());
             } else {
                 film.setLikesNumber(0);
