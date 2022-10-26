@@ -1,16 +1,16 @@
 # java-filmorate
-Repository for Filmorate - educational project with Spring Boot and Maven
+Repository for Filmorate - project with Spring Boot and Maven
 
 ------
 
-#### На 25.09.2022 приложение умеет:
-1. Три эндпойнда для работы с сущностью Film: просмотр всех фильмов, создание и обновление фильма.
-2. Три эндпойнда для работы с сущностью User: просмотр всех пользователей, создание и обновление пользователя.
-3. Входные данные проходят валидацию.
-4. Включено логирование на уровне debug.
+#### На 26.10.2022 приложение умеет:
+1. 
+2. Full Rest API.
+2. Входные данные проходят валидацию.
+3. Включено логирование на уровне debug.
 
 #### В планах:
-Дальнейшее развитие приложения будет получать каждые две недели - на каждом спринте
+Хранение данных в БД
 
 Приложение написано на Java. Пример кода:
 ```java
@@ -20,3 +20,5 @@ public class Practicum {
 }
 ```
 ------
+ER-диаграмма:
+![ER-диаграмма](D:\DATA\DEV_java\java-filmorate\src\main\java\ru\yandex\practicum\filmorate\model\ER_filmorate.PNG)
