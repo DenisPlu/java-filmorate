@@ -22,4 +22,4 @@ public class Practicum {
 ------
 ER-диаграмма:
 
-![ER-диаграмма](D:\DATA\DEV_java\java-filmorate\src\main\java\ru\yandex\practicum\filmorate\model\ER_filmorate.PNG)
+![ER-диаграмма](D:\DATA\DEV_java\java-filmorate\src\main\java\ru\yandex\practicum\filmorate\model\ER_filmorate.jpg)
