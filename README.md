@@ -4,7 +4,7 @@ Repository for Filmorate - project with Spring Boot and Maven
 ------
 
 #### На 26.10.2022 приложение умеет:
-1. Работа с пользователями, фильмами, ставить лайки и заводить друзей
+1. 
 2. Full Rest API.
 2. Входные данные проходят валидацию.
 3. Включено логирование на уровне debug.
@@ -21,5 +21,4 @@ public class Practicum {
 ```
 ------
 ER-диаграмма:
-
-![ER-диаграмма](D:\DATA\DEV_java\java-filmorate\src\main\java\ru\yandex\practicum\filmorate\model\ER_filmorate.jpg)
+![ER-диаграмма](src\main\java\ru\yandex\practicum\filmorate\images\ER_filmorate.jpg)
