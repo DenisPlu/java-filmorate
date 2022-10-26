@@ -21,4 +21,4 @@ public class Practicum {
 ```
 ------
 ER-диаграмма:
-![ER-диаграмма](src\main\java\ru\yandex\practicum\filmorate\images\ER_filmorate.jpg)
+![ER-диаграмма](src/main/java/ru/yandex/practicum/filmorate/images/ER_filmorate.jpg)
