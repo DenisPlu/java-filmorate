@@ -5,12 +5,14 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 import ru.yandex.practicum.filmorate.controller.FilmController;
+import ru.yandex.practicum.filmorate.dao.FilmDbStorage;
+import ru.yandex.practicum.filmorate.dao.UserDbStorage;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
-import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -29,7 +31,7 @@ class FilmControllerTests {
 
     @BeforeEach
     void setUp() {
-        filmController = new FilmController(new FilmService(new InMemoryFilmStorage()), new UserService(new InMemoryUserStorage()));
+        filmController = new FilmController(new FilmService(new FilmDbStorage(new JdbcTemplate())), new UserService(new UserDbStorage(new JdbcTemplate())));
     }
 
     @Test
@@ -53,7 +55,7 @@ class FilmControllerTests {
                 .duration(120)
                 .build();
         filmController.create(film);
-        assertEquals(filmController.getFilmService().getInMemoryFilmStorage().getAll().size(), 1, "Валидация не прошла при корректных параментах, фильм не создался");
+        assertEquals(filmController.getFilmService().getFilmStorage().getAll().size(), 1, "Валидация не прошла при корректных параментах, фильм не создался");
     }
 
     @Test
@@ -64,7 +66,7 @@ class FilmControllerTests {
         filmController.create(film);
         filmController.create(film2);
         filmController.update(film3);
-        assertEquals(filmController.getFilmService().getInMemoryFilmStorage().getAll().get(1), film3, "Обновление фильма не прошло");
+        assertEquals(filmController.getFilmService().getFilmStorage().getAll().get(1), film3, "Обновление фильма не прошло");
     }
 
     @Test
@@ -75,7 +77,7 @@ class FilmControllerTests {
         filmController.create(film);
         filmController.create(film2);
         filmController.update(film3);
-        assertEquals(filmController.getFilmService().getInMemoryFilmStorage().getAll().get(1), film3, "Обновление фильма прошло при некорректно заданном id");
+        assertEquals(filmController.getFilmService().getFilmStorage().getAll().get(1), film3, "Обновление фильма прошло при некорректно заданном id");
     }
 
     private static final Validator validator;

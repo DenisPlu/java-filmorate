@@ -1,9 +1,6 @@
 package ru.yandex.practicum.filmorate.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -23,4 +20,16 @@ public class User {
     private LocalDate birthday;
     private Set<Integer> friendsList = new HashSet<>();
     private Map<Integer, Boolean> friendshipStatus = new HashMap<>();
+
+    public User(String id, String email, String login, String name, String birthday) {
+    }
+
+    public Map<String, ?> toMap() {
+        Map<String, Object> values = new HashMap<>();
+        values.put("email", email);
+        values.put("login", login);
+        values.put("name", name);
+        values.put("birthday", birthday);
+        return values;
+    }
 }

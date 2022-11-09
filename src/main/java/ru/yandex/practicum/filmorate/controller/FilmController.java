@@ -23,13 +23,13 @@ public class FilmController {
 
     @GetMapping("/films")
     public List<Film> getAll() {
-        return filmService.getInMemoryFilmStorage().getAll();
+        return filmService.getFilmStorage().getAll();
     }
 
     @GetMapping("/films/{id}")
     public Film getFilmById(@PathVariable final int id) {
         try{
-            return Optional.ofNullable(filmService.getInMemoryFilmStorage().getAll().get(id - 1)).get();
+            return Optional.ofNullable(filmService.getFilmStorage().getAll().get(id - 1)).get();
         } catch (RuntimeException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Заданного фильма не существует", e);
         }
@@ -40,16 +40,15 @@ public class FilmController {
     }
 
     @PostMapping(value = "/films")
-    public Film create(@RequestBody @Valid Film film) {
+    public Optional<Film> create(@RequestBody @Valid Film film) {
             log.debug("Добавлен фильм: {}", film);
-            filmService.getInMemoryFilmStorage().create(film);
-            return film;
+            return filmService.getFilmStorage().create(film);
     }
 
     @PutMapping(value = "/films")
     public Film update(@RequestBody @Valid Film film) {
             log.debug("Обновлен фильм: {}", film);
-            filmService.getInMemoryFilmStorage().update(film);
+            filmService.getFilmStorage().update(film);
             return film;
     }
 
@@ -61,8 +60,8 @@ public class FilmController {
 
     @DeleteMapping(value = "/films/{id}/like/{userId}")
     public int deleteLikeFromFilm(@PathVariable final int id, @PathVariable final int userId) {
-        if (userId < 0 || userId > userService.getInMemoryUserStorage().getAll().size()){
-            System.out.println(userService.getInMemoryUserStorage().getAll().size());
+        if (userId < 0 || userId > userService.getUserStorage().getAll().size()){
+            System.out.println(userService.getUserStorage().getAll().size());
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Заданного пользователя не существует");
         } else {
             log.debug("Удален лайк у фильма c Id: {}, пользователя с Id: {}", id, userId);
