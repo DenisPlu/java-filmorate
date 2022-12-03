@@ -1,83 +1,79 @@
 package ru.yandex.practicum.filmorate;
 
+import lombok.RequiredArgsConstructor;
 import org.junit.Assert;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.jdbc.core.JdbcTemplate;
-import ru.yandex.practicum.filmorate.controller.FilmController;
-import ru.yandex.practicum.filmorate.dao.FilmDbStorage;
-import ru.yandex.practicum.filmorate.dao.UserDbStorage;
+import org.springframework.test.annotation.DirtiesContext;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
+@AutoConfigureTestDatabase
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 @SpringBootTest
 class FilmControllerTests {
 
-    FilmController filmController;
-
-    @BeforeEach
-    void setUp() {
-        filmController = new FilmController(new FilmService(new FilmDbStorage(new JdbcTemplate())), new UserService(new UserDbStorage(new JdbcTemplate())));
-    }
+    public final FilmService filmService;
+    public final UserService userService;
 
     @Test
-    void getFilmById() {
+    @DirtiesContext
+    void checkCreateAndFindFilmById() {
         Film film = Film.builder()
+                .id(1)
                 .name("Film1")
-                .description("Фильм первый")
+                .description("Фильм_тест checkCreateAndFindFilmById")
                 .releaseDate(LocalDate.of(2000, 1, 1))
                 .duration(120)
+                .rate(1)
+                .mpa(Mpa.builder().id(1).name("G").build())
+                .genres(new ArrayList<>())
+                .likes(new HashSet<>())
                 .build();
-        filmController.create(film);
-        assertEquals(filmController.getFilmById(1), film, "Некорректное получение фильма по id");
-    }
-
-    @Test
-    void checkCorrectCreateFilm() {
-        Film film = Film.builder()
-                .name("Film1")
-                .description("Фильм первый")
-                .releaseDate(LocalDate.of(2000, 1, 1))
-                .duration(120)
-                .build();
-        filmController.create(film);
-        assertEquals(filmController.getFilmService().getFilmStorage().getAll().size(), 1, "Валидация не прошла при корректных параментах, фильм не создался");
+        Integer id = filmService.getFilmStorage().create(film).get().getId();
+        assertEquals(filmService.getFilmStorage().findFilmById(id.toString()).get().getName(), film.getName(),
+                "Некорректное сохранение или получение фильма по id");
     }
 
     @Test
     void checkCorrectUpdateFilm() {
-        Film film = Film.builder().name("Film1").description("Фильм первый").releaseDate(LocalDate.of(2000, 1, 1)).duration(120).build();
-        Film film2 = Film.builder().name("Film2").description("Фильм первый").releaseDate(LocalDate.of(2000, 1, 1)).duration(120).build();
-        Film film3 = Film.builder().id(2).name("Film1").description("Фильм первый").releaseDate(LocalDate.of(2000, 1, 1)).duration(120).build();
-        filmController.create(film);
-        filmController.create(film2);
-        filmController.update(film3);
-        assertEquals(filmController.getFilmService().getFilmStorage().getAll().get(1), film3, "Обновление фильма не прошло");
-    }
-
-    @Test
-    void checkUpdateFilmWhenIdIsIncorrect() {
-        Film film = Film.builder().name("Film1").description("Фильм первый").releaseDate(LocalDate.of(2000, 1, 1)).duration(120).build();
-        Film film2 = Film.builder().name("Film2").description("Фильм второй").releaseDate(LocalDate.of(2000, 1, 1)).duration(120).build();
-        Film film3 = Film.builder().id(2).name("Film3").description("Фильм третий").releaseDate(LocalDate.of(2000, 1, 1)).duration(120).build();
-        filmController.create(film);
-        filmController.create(film2);
-        filmController.update(film3);
-        assertEquals(filmController.getFilmService().getFilmStorage().getAll().get(1), film3, "Обновление фильма прошло при некорректно заданном id");
+        Film film = Film.builder().name("Film1").description("Фильм первый")
+                .releaseDate(LocalDate.of(2000, 1, 1)).duration(120)
+                .rate(1).mpa(Mpa.builder().id(1).name("G").build())
+                .likes(new HashSet<>())
+                .build();
+        Film film2 = Film.builder().name("Film2").description("Фильм второй")
+                .releaseDate(LocalDate.of(2000, 1, 1)).duration(120)
+                .rate(1).mpa(Mpa.builder().id(1).name("G").build())
+                .likes(new HashSet<>())
+                .build();
+        Film film3 = Film.builder().id(1).name("Film1").description("Фильм первый")
+                .releaseDate(LocalDate.of(2000, 1, 1)).duration(120)
+                .rate(1).mpa(Mpa.builder().id(1).name("G").build())
+                .likes(new HashSet<>())
+                .genres(new ArrayList<>())
+                .build();
+        filmService.getFilmStorage().create(film);
+        filmService.getFilmStorage().create(film2);
+        filmService.getFilmStorage().update(film3);
+        assertEquals(filmService.getFilmStorage().findFilmById("1"), Optional.of(film3), "Обновление фильма не прошло");
     }
 
     private static final Validator validator;
@@ -88,8 +84,13 @@ class FilmControllerTests {
     }
 
     @Test
+    @DirtiesContext
     public void checkCreateFilmWhenNameIsEmpty() {
-        final Film film = Film.builder().name("").description("Фильм первый").releaseDate(LocalDate.of(2000, 1, 1)).duration(120).build();
+        final Film film = Film.builder().name("").description("Фильм первый")
+                .releaseDate(LocalDate.of(2000, 1, 1)).duration(120)
+                .rate(1).mpa(Mpa.builder().id(1).name("G").build())
+                .genres(new ArrayList<>())
+                .build();
         Set<ConstraintViolation<Film>> validates = validator.validate(film);
         Assertions.assertTrue(validates.size() > 0);
         validates.stream().map(v -> v.getMessage())
@@ -104,7 +105,10 @@ class FilmControllerTests {
                         "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" +
                         "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" +
                         "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
-                .releaseDate(LocalDate.of(2000, 1, 1)).duration(120).build();
+                .releaseDate(LocalDate.of(2000, 1, 1)).duration(120)
+                .rate(1).mpa(Mpa.builder().id(1).name("G").build())
+                .genres(new ArrayList<>())
+                .build();
         Set<ConstraintViolation<Film>> validates = validator.validate(film);
         Assertions.assertTrue(validates.size() > 0);
         validates.stream().map(v -> v.getMessage())
@@ -113,16 +117,24 @@ class FilmControllerTests {
 
     @Test
     public void checkCreateFilmWhenReleaseDateIsBefore1895() {
-        final Film film = Film.builder().name("Film1").description("Фильм первый").releaseDate(LocalDate.of(1700, 1, 1)).duration(120).build();
+        final Film film = Film.builder().name("Film1").description("Фильм первый")
+                .releaseDate(LocalDate.of(1700, 1, 1)).duration(120)
+                .rate(1).mpa(Mpa.builder().id(1).name("G").build())
+                .genres(new ArrayList<>())
+                .build();
         Set<ConstraintViolation<Film>> validates = validator.validate(film);
-        Assert.assertTrue(validates.size() > 0);
+        assertTrue(validates.size() > 0);
         validates.stream().map(v -> v.getMessage())
                 .forEach(System.out::println);
     }
 
     @Test
     public void checkCreateFilmWhenDurationIsNegative() {
-        final Film film = Film.builder().name("Film").description("Фильм первый").releaseDate(LocalDate.of(2000, 1, 1)).duration(-1).build();
+        final Film film = Film.builder().name("Film").description("Фильм первый")
+                .releaseDate(LocalDate.of(2000, 1, 1)).duration(-1)
+                .rate(1).mpa(Mpa.builder().id(1).name("G").build())
+                .genres(new ArrayList<>())
+                .build();
         Set<ConstraintViolation<Film>> validates = validator.validate(film);
         Assertions.assertTrue(validates.size() > 0);
         validates.stream().map(v -> v.getMessage())
@@ -130,33 +142,157 @@ class FilmControllerTests {
     }
 
     @Test
-    public void checkGetTenFilmsWithBestLikes() {
-        final Film film1 = Film.builder().name("").description("Фильм первый").releaseDate(LocalDate.of(2000, 1, 1)).duration(120).likes(Set.of(1,2,3)).build();
-        final Film film2 = Film.builder().name("").description("Фильм первый").releaseDate(LocalDate.of(2000, 1, 1)).duration(130).likes(Set.of(1,2,3)).build();
-        final Film film3 = Film.builder().name("").description("Фильм первый").releaseDate(LocalDate.of(2000, 1, 1)).duration(120).likes(Set.of(1,2,3)).build();
-        final Film film4 = Film.builder().name("").description("Фильм первый").releaseDate(LocalDate.of(2000, 1, 1)).duration(120).likes(Set.of(1,2,3)).build();
-        final Film film5 = Film.builder().name("").description("Фильм первый").releaseDate(LocalDate.of(2000, 1, 1)).duration(120).likes(Set.of(1,2,3,4)).build();
-        final Film film6 = Film.builder().name("").description("Фильм первый").releaseDate(LocalDate.of(2000, 1, 1)).duration(120).likes(Set.of(1,2,3)).build();
-        final Film film7 = Film.builder().name("").description("Фильм первый").releaseDate(LocalDate.of(2000, 1, 1)).duration(160).likes(Set.of(1,2,3)).build();
-        final Film film8 = Film.builder().name("").description("Фильм первый").releaseDate(LocalDate.of(2000, 1, 1)).duration(120).likes(Set.of(1,2,3)).build();
-        final Film film9 = Film.builder().name("").description("Фильм первый").releaseDate(LocalDate.of(2000, 1, 1)).duration(120).likes(Set.of(1,2,3)).build();
-        final Film film10 = Film.builder().name("").description("Фильм первый").releaseDate(LocalDate.of(2000, 1, 1)).duration(120).likes(Set.of(1,2,3)).build();
-        final Film film11 = Film.builder().name("").description("Фильм первый").releaseDate(LocalDate.of(2000, 1, 1)).duration(120).likes(Set.of(1,2,3,4,5)).build();
-        final Film film12 = Film.builder().name("").description("Фильм первый").releaseDate(LocalDate.of(2000, 1, 1)).duration(120).likes(Set.of(1,2,3,4,5,6)).build();
-        filmController.create(film1);
-        filmController.create(film2);
-        filmController.create(film3);
-        filmController.create(film4);
-        filmController.create(film5);
-        filmController.create(film6);
-        filmController.create(film7);
-        filmController.create(film8);
-        filmController.create(film9);
-        filmController.create(film10);
-        filmController.create(film11);
-        filmController.create(film12);
+    public void getAll() {
+        final Film film1 = Film.builder().name("").description("Фильм первый")
+                .releaseDate(LocalDate.of(2000, 1, 1)).duration(120)
+                .rate(1).mpa(Mpa.builder().id(1).name("G").build())
+                .genres(new ArrayList<>())
+                .likes(new HashSet<>())
+                .build();
+        final Film film2 = Film.builder().name("").description("Фильм первый")
+                .releaseDate(LocalDate.of(2000, 1, 1)).duration(130)
+                .rate(2).mpa(Mpa.builder().id(1).name("G").build())
+                .genres(new ArrayList<>())
+                .likes(new HashSet<>())
+                .build();
+        final Film film3 = Film.builder().name("").description("Фильм первый")
+                .releaseDate(LocalDate.of(2000, 1, 1)).duration(120)
+                .rate(3).mpa(Mpa.builder().id(1).name("G").build())
+                .genres(new ArrayList<>())
+                .build();
+        filmService.getFilmStorage().create(film1);
+        filmService.getFilmStorage().create(film2);
+        filmService.getFilmStorage().create(film3);
+        System.out.println(filmService.getFilmStorage().getAll());
+        assertEquals(filmService.getFilmStorage().getAll().size(), 3);
+    }
 
-        List<Film> tenFilmsWithBestLikes = filmController.getFilmService().getFilmsWithBestLikes(10);
-        assertEquals(10, tenFilmsWithBestLikes.size());
+    @Test
+    public void addAndRemoveLike() throws ValidationException {
+        final Film film1 = Film.builder().name("Film").description("Фильм первый")
+                .releaseDate(LocalDate.of(2000, 1, 1)).duration(120)
+                .rate(1).mpa(Mpa.builder().id(1).name("G").build())
+                .genres(new ArrayList<>())
+                .likes(new HashSet<>())
+                .build();
+        User user = User.builder()
+                .id(1)
+                .email("email@yandex.ru")
+                .login("DEN")
+                .name("Denis")
+                .birthday(LocalDate.of(2000, 1, 1))
+                .friendsList(new HashSet<>())
+                .build();
+        filmService.getFilmStorage().create(film1);
+        userService.getUserStorage().create(user);
+        filmService.getFilmStorage().addLike("1", "1");
+        System.out.println(filmService.getFilmStorage().findFilmById("1"));
+        System.out.println(userService.getUserStorage().findUserById("1"));
+        assertEquals(filmService.getFilmStorage().findFilmById("1").get().getLikes().size(), 1);
+
+        filmService.getFilmStorage().removeLike(1, 1);
+        assertEquals(filmService.getFilmStorage().findFilmById("1").get().getLikes().size(), 0);
+    }
+
+    @Test
+    public void checkGetTwoFilmsWithBestLikes() throws ValidationException {
+        final Film film1 = Film.builder().name("Film1").description("Фильм первый")
+                .releaseDate(LocalDate.of(2000, 1, 1)).duration(120)
+                .rate(0).mpa(Mpa.builder().id(1).name("G").build())
+                .likes(new HashSet<>())
+                .genres(new ArrayList<>())
+                .build();
+        final Film film2 = Film.builder().name("Film2").description("Фильм 2")
+                .releaseDate(LocalDate.of(2000, 1, 1)).duration(130)
+                .rate(0).mpa(Mpa.builder().id(1).name("G").build())
+                .likes(new HashSet<>())
+                .genres(new ArrayList<>())
+                .build();
+        final Film film3 = Film.builder().name("Film3").description("Фильм 3")
+                .releaseDate(LocalDate.of(2000, 1, 1)).duration(120)
+                .rate(0).mpa(Mpa.builder().id(1).name("G").build())
+                .likes(new HashSet<>())
+                .genres(new ArrayList<>())
+                .build();
+        final Film film4 = Film.builder().name("Film4").description("Фильм 4")
+                .releaseDate(LocalDate.of(2000, 1, 1)).duration(120)
+                .likes(new HashSet<>())
+                .rate(0).mpa(Mpa.builder().id(1).name("G").build())
+                .genres(new ArrayList<>())
+                .build();
+
+        User user1 = User.builder()
+                .id(1)
+                .email("email@yandex.ru")
+                .login("DEN")
+                .name("Denis")
+                .birthday(LocalDate.of(2000, 1, 1))
+                .friendsList(new HashSet<>())
+                .build();
+        User user2 = User.builder()
+                .id(2)
+                .email("email2@yandex.ru")
+                .login("DEN2")
+                .name("Denis2")
+                .birthday(LocalDate.of(2000, 1, 1))
+                .friendsList(new HashSet<>())
+                .build();
+        userService.getUserStorage().create(user1);
+        userService.getUserStorage().create(user2);
+        filmService.getFilmStorage().create(film1);
+        filmService.getFilmStorage().create(film2);
+        filmService.getFilmStorage().create(film3);
+        filmService.getFilmStorage().create(film4);
+        filmService.getFilmStorage().addLike("1", "1");
+        filmService.getFilmStorage().addLike("2", "1");
+        filmService.getFilmStorage().addLike("2", "2");
+        filmService.getFilmStorage().addLike("3", "1");
+        filmService.getFilmStorage().addLike("4", "1");
+
+        List<Film> tenFilmsWithBestLikes = filmService.getFilmsWithBestLikes(2);
+        assertEquals(2, tenFilmsWithBestLikes.size());
+    }
+
+    @Test
+    public void getFilmMpaById() {
+        final Film film1 = Film.builder().name("Film").description("Фильм первый")
+                .releaseDate(LocalDate.of(2000, 1, 1)).duration(120)
+                .rate(1).mpa(Mpa.builder().id(1).name("G").build())
+                .genres(new ArrayList<>())
+                .likes(new HashSet<>())
+                .build();
+        filmService.getFilmStorage().create(film1);
+        assertEquals(filmService.getFilmStorage().getMpaStorage().getFilmMpaById("1").get(), Mpa.builder().id(1).name("G").build());
+    }
+
+    @Test
+    public void getFilmsMpa() {
+        assertEquals(filmService.getFilmStorage().getMpaStorage().getFilmsMpa().size(), 5);
+    }
+
+    @Test
+    public void getFilmsGenre() {
+        assertEquals(filmService.getFilmStorage().getGenreStorage().getFilmsGenre().size(), 6);
+    }
+
+    @Test
+    public void getFilmGenreById() {
+        List listGenres = new ArrayList<>();
+        listGenres.add(Genre.builder().id(1).name("Комедия").build());
+        assertEquals(filmService.getFilmStorage().getGenreStorage().getFilmGenreById("1").get(), listGenres.get(0));
+    }
+
+    @Test
+    public void getFilmGenreByFilmId() {
+        List listGenres = new ArrayList<>();
+        listGenres.add(Genre.builder().id(1).name("Комедия").build());
+        final Film film1 = Film.builder().name("Film").description("Фильм первый")
+                .releaseDate(LocalDate.of(2000, 1, 1)).duration(120)
+                .rate(1).mpa(Mpa.builder().id(1).name("G").build())
+                .genres(listGenres)
+                .likes(new HashSet<>())
+                .build();
+        Integer id = filmService.getFilmStorage().create(film1).get().getId();
+        assertEquals(filmService.getFilmStorage().getGenreStorage().getFilmGenreByFilmId(id.toString()), listGenres);
     }
 }

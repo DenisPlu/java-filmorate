@@ -1,42 +1,44 @@
 package ru.yandex.practicum.filmorate;
 
-import org.junit.jupiter.api.BeforeEach;
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.jdbc.core.JdbcTemplate;
-import ru.yandex.practicum.filmorate.controller.UserController;
-import ru.yandex.practicum.filmorate.dao.UserDbStorage;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.Friendship;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+
+@AutoConfigureTestDatabase
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 @SpringBootTest
 class UserControllerTests {
-    UserController userController;
-
-    @BeforeEach
-    void setUp() {
-        userController = new UserController(new UserService(new UserDbStorage(new JdbcTemplate())));
-    }
+    public final UserService userService;
 
     @Test
-    void checkCorrectCreateUser() throws ValidationException {
+    public void testCreateAndGetUser() throws ValidationException {
         User user = User.builder()
+                .id(1)
                 .email("email@yandex.ru")
                 .login("DEN")
                 .name("Denis")
                 .birthday(LocalDate.of(2000, 1, 1))
+                .friendsList(new HashSet<>())
                 .build();
-        userController.create(user);
-        assertEquals(userController.getAll().size(), 1, "Валидация не прошла при корректных параментах, пользователь не создался");
+        Integer id = userService.getUserStorage().create(user).get().getId();
+        user.setId(id);
+        assertEquals(Optional.of(user), userService.getUserStorage().findUserById(id.toString()));
     }
 
     @Test
@@ -46,8 +48,12 @@ class UserControllerTests {
                 new Executable() {
                     @Override
                     public void execute() throws ValidationException {
-                        User user = User.builder().email("").login("DEN").name("Denis").birthday(LocalDate.of(2000, 1, 1)).build();
-                        userController.create(user);
+                        User user = User.builder()
+                                .email("").login("DEN")
+                                .name("Denis")
+                                .birthday(LocalDate.of(2000, 1, 1))
+                                .build();
+                        userService.getUserStorage().create(user);
                     }
                 });
         assertEquals("Ошибка валидации входных данных, проверьте параметры: Email, Login, Birthday.", ex.getMessage());
@@ -61,7 +67,7 @@ class UserControllerTests {
                     @Override
                     public void execute() throws ValidationException {
                         User user = User.builder().email("emailyandex.ru").login("DEN").name("Denis").birthday(LocalDate.of(2000, 1, 1)).build();
-                        userController.create(user);
+                        userService.getUserStorage().create(user);
                     }
                 });
         assertEquals("Ошибка валидации входных данных, проверьте параметры: Email, Login, Birthday.", ex.getMessage());
@@ -75,7 +81,7 @@ class UserControllerTests {
                     @Override
                     public void execute() throws ValidationException {
                         User user = User.builder().email("email@yandex.ru").login("").name("Denis").birthday(LocalDate.of(2000, 1, 1)).build();
-                        userController.create(user);
+                        userService.getUserStorage().create(user);
                     }
                 });
         assertEquals("Ошибка валидации входных данных, проверьте параметры: Email, Login, Birthday.", ex.getMessage());
@@ -88,8 +94,12 @@ class UserControllerTests {
                 new Executable() {
                     @Override
                     public void execute() throws ValidationException {
-                        User user = User.builder().email("email@yandex.ru").login("D EN").name("Denis").birthday(LocalDate.of(2000, 1, 1)).build();
-                        userController.create(user);
+                        User user = User.builder()
+                                .email("email@yandex.ru")
+                                .login("D EN").name("Denis")
+                                .birthday(LocalDate.of(2000, 1, 1))
+                                .build();
+                        userService.getUserStorage().create(user);
                     }
                 });
         assertEquals("Ошибка валидации входных данных, проверьте параметры: Email, Login, Birthday.", ex.getMessage());
@@ -97,30 +107,136 @@ class UserControllerTests {
 
     @Test
     void checkCreateUserWithEmptyName() throws ValidationException {
-        User user = User.builder().email("email@yandex.ru").login("DEN").name("").birthday(LocalDate.of(2000, 1, 1)).build();
-        userController.create(user);
-        assertEquals(userController.getAll().get(0).getName(), "DEN", "Валидация прошла при пустом name, но login не присвоился для name");
+        User user = User.builder()
+                .email("email@yandex.ru")
+                .login("DEN").name("")
+                .birthday(LocalDate.of(2000, 1, 1))
+                .friendsList(new HashSet<>())
+                .build();
+        userService.getUserStorage().create(user);
+        assertEquals(userService.getUserStorage().getAll().get(0).getName(), "DEN", "Валидация прошла при пустом name, но login не присвоился для name");
     }
 
     @Test
-    void checkUpdateUser() throws ValidationException {
-        User user = User.builder().email("email@yandex.ru").login("DEN").name("Denis").birthday(LocalDate.of(2000, 1, 1)).build();
-        User user2 = User.builder().email("email@yandex.ru").login("DEN2").name("").birthday(LocalDate.of(2000, 1, 1)).build();
-        User user3 = User.builder().id(2).email("email@yandex.ru").login("DEN3").name("Denis").birthday(LocalDate.of(2000, 1, 1)).build();
-        userController.create(user);
-        userController.create(user2);
-        userController.update(user3);
-        assertEquals(userController.getAll().get(1), user3, "Обновление пользователя не прошло");
+    void checkUpdateUserWithoutFriends() throws ValidationException {
+        User user1 = User.builder()
+                .email("email@yandex.ru")
+                .login("DEN1")
+                .name("Denis")
+                .birthday(LocalDate.of(2000, 1, 1))
+                .friendsList(new HashSet<>())
+                .build();
+        User user2 = User.builder()
+                .email("email2@yandex.ru")
+                .login("DEN2")
+                .name("Denis")
+                .birthday(LocalDate.of(2000, 1, 1))
+                .friendsList(new HashSet<>())
+                .build();
+        User user3 = User.builder()
+                .id(1)
+                .email("email3@yandex.ru")
+                .login("DEN3")
+                .name("")
+                .birthday(LocalDate.of(2000, 1, 1))
+                .friendsList(Set.of(Friendship.builder().friendId(2).status("FALSE").build()))
+                .build();
+        userService.getUserStorage().create(user1);
+        userService.getUserStorage().create(user2);
+        userService.getUserStorage().update(user3);
+        assertEquals(userService.getUserStorage().findUserById("1"), Optional.of(user3), "Обновление пользователя не прошло");
+    }
+
+    @Test
+    void checkUpdateUserWithFriends() throws ValidationException {
+        User user1 = User.builder()
+                .email("email1@yandex.ru")
+                .login("DEN1")
+                .name("Denis")
+                .birthday(LocalDate.of(2000, 1, 1))
+                .friendsList(new HashSet<>())
+                .build();
+        User user2 = User.builder()
+                .email("email2@yandex.ru")
+                .login("DEN2")
+                .name("Denis")
+                .birthday(LocalDate.of(2000, 1, 1))
+                .friendsList(new HashSet<>())
+                .build();
+        User user3 = User.builder()
+                .id(3)
+                .email("email3@yandex.ru")
+                .login("DEN3")
+                .name("Denis")
+                .birthday(LocalDate.of(2000, 1, 1))
+                .friendsList(Set.of(Friendship.builder().friendId(2).status("FALSE").build(),
+                        Friendship.builder().friendId(1).status("FALSE").build()))
+                .build();
+        userService.getUserStorage().create(user1);
+        userService.getUserStorage().create(user2);
+        Integer id = userService.getUserStorage().create(user3).get().getId();
+        User user4 = User.builder()
+                .id(id)
+                .email("email3@yandex.ru")
+                .login("DEN3")
+                .name("Denis")
+                .birthday(LocalDate.of(2000, 1, 1))
+                .friendsList(Set.of(Friendship.builder().friendId(1).status("FALSE").build()))
+                .build();
+        userService.getUserStorage().update(user4);
+        assertEquals(userService.getUserStorage().findUserById(id.toString()), Optional.of(user4), "Обновление пользователя не прошло");
+    }
+
+    @Test
+    void checkUpdateUserFriendsAndFriendship() throws ValidationException {
+        User user1 = User.builder()
+                .email("email1@yandex.ru")
+                .login("DEN1")
+                .name("Denis")
+                .birthday(LocalDate.of(2000, 1, 1))
+                .friendsList(new HashSet<>())
+                .build();
+        User user2 = User.builder()
+                .email("email2@yandex.ru")
+                .login("DEN2")
+                .name("Denis")
+                .birthday(LocalDate.of(2000, 1, 1))
+                .friendsList(new HashSet<>())
+                .build();
+        Integer id1 = userService.getUserStorage().create(user1).get().getId();
+        Integer id2 = userService.getUserStorage().create(user2).get().getId();
+        userService.getUserStorage().getFriendshipStorage().addFriend(id1.toString(), id2.toString());
+        userService.getUserStorage().getFriendshipStorage().addFriend(id2.toString(), id1.toString());
+        assertEquals(userService.getUserStorage().getFriendshipStorage().getFriendStatus(id1.toString(), id2.toString()), Optional.of("TRUE"), "Обновление дружбы не прошло");
     }
 
     @Test
     void getCommonFriends() throws ValidationException {
-        User user = User.builder().email("email1@yandex.ru").login("DEN").name("Denis").birthday(LocalDate.of(2000, 1, 1)).friendsList(Set.of(3, 4)).build();
-        User user2 = User.builder().email("email2@yandex.ru").login("DEN2").name("").birthday(LocalDate.of(2000, 1, 1)).friendsList(Set.of(3, 5)).build();
-        User user3 = User.builder().email("email3@yandex.ru").login("DEN3").name("Denis").birthday(LocalDate.of(2000, 1, 1)).build();
-        userController.create(user);
-        userController.create(user2);
-        userController.create(user3);
-        assertEquals(userController.getCommonFriends(1,2).get(0), user3, "Некорректное получение списка общих друзей");
+        User user1 = User.builder().id(1).email("email1@yandex.ru").login("DEN").name("Denis")
+                .birthday(LocalDate.of(2000, 1, 1)).build();
+        User user2 = User.builder().id(2).email("email2@yandex.ru").login("DEN2")
+                .name("Denis2").birthday(LocalDate.of(2000, 1, 1)).build();
+        User user3 = User.builder()
+                .id(3)
+                .email("email3@yandex.ru")
+                .login("DEN3")
+                .name("Denis")
+                .birthday(LocalDate.of(2000, 1, 1))
+                .friendsList(new HashSet<>())
+                .build();
+        userService.getUserStorage().create(user1);
+        userService.getUserStorage().create(user2);
+        userService.getUserStorage().create(user3);
+        user1.setFriendsList(Set.of(Friendship.builder().friendId(3).status("false").build()));
+        user2.setFriendsList(Set.of(Friendship.builder().friendId(3).status("false").build()));
+        userService.getUserStorage().update(user1);
+        userService.getUserStorage().update(user2);
+        userService.getUserStorage().update(user3);
+        System.out.println(user1);
+        System.out.println(user2);
+        System.out.println(user3);
+        System.out.println(userService.getUserStorage().findUserById("1"));
+        System.out.println(userService.getUserStorage().getFriendshipStorage().getFriendsId("1"));
+        assertEquals(userService.getCommonFriends("1", "2").get(0), user3, "Некорректное получение списка общих друзей");
     }
 }

@@ -18,11 +18,7 @@ public class User {
     private String login;
     private String name;
     private LocalDate birthday;
-    private Set<Integer> friendsList = new HashSet<>();
-    private Map<Integer, Boolean> friendshipStatus = new HashMap<>();
-
-    public User(String id, String email, String login, String name, String birthday) {
-    }
+    private Set<Friendship> friendsList = new HashSet<>();
 
     public Map<String, ?> toMap() {
         Map<String, Object> values = new HashMap<>();
