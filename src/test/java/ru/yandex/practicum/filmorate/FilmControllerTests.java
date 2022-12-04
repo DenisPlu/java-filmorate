@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate;
 
 import lombok.RequiredArgsConstructor;
-import org.junit.Assert;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +41,6 @@ class FilmControllerTests {
                 .description("Фильм_тест checkCreateAndFindFilmById")
                 .releaseDate(LocalDate.of(2000, 1, 1))
                 .duration(120)
-                .rate(1)
                 .mpa(Mpa.builder().id(1).name("G").build())
                 .genres(new ArrayList<>())
                 .likes(new HashSet<>())
@@ -56,17 +54,17 @@ class FilmControllerTests {
     void checkCorrectUpdateFilm() {
         Film film = Film.builder().name("Film1").description("Фильм первый")
                 .releaseDate(LocalDate.of(2000, 1, 1)).duration(120)
-                .rate(1).mpa(Mpa.builder().id(1).name("G").build())
+                .mpa(Mpa.builder().id(1).name("G").build())
                 .likes(new HashSet<>())
                 .build();
         Film film2 = Film.builder().name("Film2").description("Фильм второй")
                 .releaseDate(LocalDate.of(2000, 1, 1)).duration(120)
-                .rate(1).mpa(Mpa.builder().id(1).name("G").build())
+                .mpa(Mpa.builder().id(1).name("G").build())
                 .likes(new HashSet<>())
                 .build();
         Film film3 = Film.builder().id(1).name("Film1").description("Фильм первый")
                 .releaseDate(LocalDate.of(2000, 1, 1)).duration(120)
-                .rate(1).mpa(Mpa.builder().id(1).name("G").build())
+                .rate(0).mpa(Mpa.builder().id(1).name("G").build())
                 .likes(new HashSet<>())
                 .genres(new ArrayList<>())
                 .build();

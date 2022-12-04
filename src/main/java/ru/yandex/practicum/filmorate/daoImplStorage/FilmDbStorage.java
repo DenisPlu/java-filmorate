@@ -30,11 +30,11 @@ public class FilmDbStorage implements FilmStorage {
     private final MpaStorage mpaStorage;
     private final GenreStorage genreStorage;
     private final String SELECT_ALL_FILMS = "SELECT * FROM films";
-    private final String CREATE_FILM_BASE = "INSERT INTO films(name, description, releaseDate, duration, rate, mpaID) " +
-            "VALUES (?, ?, ?, ?, ?, ?)";
+    private final String CREATE_FILM_BASE = "INSERT INTO films(name, description, releaseDate, duration, mpaID) " +
+            "VALUES (?, ?, ?, ?, ?)";
     private final String CREATE_FILM_GENRE = "INSERT INTO film_genre (filmID, genreID) VALUES (?, ?)";
     private final String UPDATE_FILM_BASE =
-            "UPDATE films SET name = ?, description = ?, releaseDate = ?, duration = ?, rate = ?, mpaID = ? WHERE id = ?";
+            "UPDATE films SET name = ?, description = ?, releaseDate = ?, duration = ?, mpaID = ? WHERE id = ?";
     private final String DELETE_FILM_GENRES = "DELETE FROM film_genre WHERE filmID = ?";
     private final String UPDATE_FILM_GENRES = "INSERT INTO film_genre (filmID, genreID) VALUES (?, ?)";
     private final String SELECT_FILM_BY_ID = "SELECT * FROM films WHERE id = ?";
@@ -71,8 +71,7 @@ public class FilmDbStorage implements FilmStorage {
                 statement.setString(2, film.getDescription());
                 statement.setDate(3, Date.valueOf(film.getReleaseDate()));
                 statement.setInt(4, film.getDuration());
-                statement.setInt(5, film.getRate());
-                statement.setInt(6, film.getMpa().getId());
+                statement.setInt(5, film.getMpa().getId());
                 return statement;
             }
         }, holder);
@@ -99,7 +98,6 @@ public class FilmDbStorage implements FilmStorage {
                 film.getDescription(),
                 film.getReleaseDate(),
                 film.getDuration(),
-                film.getRate(),
                 film.getMpa().getId(),
                 film.getId());
 
