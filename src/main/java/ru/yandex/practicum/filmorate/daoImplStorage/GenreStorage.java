@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.daoImplStorage;
 
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,14 +16,13 @@ import java.sql.SQLException;
 import java.util.*;
 
 @Component
-@Getter
 @RequiredArgsConstructor
 public class GenreStorage implements GenreDao {
     private final Logger log = LoggerFactory.getLogger(FilmDbStorage.class);
     private final JdbcTemplate jdbcTemplate;
-    private final String SELECT_ALL_GENRES = "SELECT * FROM genre";
-    private final String SELECT_GENRE_BY_ID = "SELECT * FROM genre WHERE genreId = ?";
-    private final String SELECT_FILM_GENRES_BY_FILM_ID = "SELECT * FROM film_genre " +
+    private static final String SELECT_ALL_GENRES = "SELECT * FROM genre";
+    private static final String SELECT_GENRE_BY_ID = "SELECT * FROM genre WHERE genreId = ?";
+    private static final String SELECT_FILM_GENRES_BY_FILM_ID = "SELECT * FROM film_genre " +
             "LEFT OUTER JOIN genre ON film_genre.genreId = genre.genreId" +
             " WHERE filmId = ?";
 

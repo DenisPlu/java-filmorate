@@ -70,21 +70,21 @@ public class FilmController {
 
     @GetMapping("/genres")
     public List<Genre> getFilmGenres() {
-        return filmService.getFilmStorage().getGenreStorage().getFilmsGenre();
+        return filmService.getGenreStorage().getFilmsGenre();
     }
 
     @GetMapping("/genres/{id}")
     public Optional<Genre> getGenresById(@PathVariable final String id) {
-        return filmService.getFilmStorage().getGenreStorage().getFilmGenreById(id);
+        return filmService.getGenreStorage().getFilmGenreById(id);
     }
 
     @GetMapping("/mpa")
     public List<Mpa> getFilmsMpa() {
-        return filmService.getFilmStorage().getMpaStorage().getFilmsMpa();
+        return filmService.getMpaStorage().getFilmsMpa();
     }
 
     @GetMapping("/mpa/{id}")
     public Optional<Mpa> getFilmMpaById(@PathVariable final String id) {
-        return filmService.getFilmStorage().getMpaStorage().getFilmMpaById(id);
+        return filmService.getMpaStorage().getFilmMpaById(id);
     }
 }

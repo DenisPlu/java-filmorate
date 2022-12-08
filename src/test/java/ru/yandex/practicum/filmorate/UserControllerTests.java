@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @SpringBootTest
 class UserControllerTests {
-    public final UserService userService;
+    final UserService userService;
 
     @Test
     public void testCreateAndGetUser() throws ValidationException {
@@ -205,9 +205,9 @@ class UserControllerTests {
                 .build();
         Integer id1 = userService.getUserStorage().create(user1).get().getId();
         Integer id2 = userService.getUserStorage().create(user2).get().getId();
-        userService.getUserStorage().getFriendshipStorage().addFriend(id1.toString(), id2.toString());
-        userService.getUserStorage().getFriendshipStorage().addFriend(id2.toString(), id1.toString());
-        assertEquals(userService.getUserStorage().getFriendshipStorage().getFriendStatus(id1.toString(), id2.toString()), Optional.of("TRUE"), "Обновление дружбы не прошло");
+        userService.getFriendshipStorage().addFriend(id1.toString(), id2.toString());
+        userService.getFriendshipStorage().addFriend(id2.toString(), id1.toString());
+        assertEquals(userService.getFriendshipStorage().getFriendStatus(id1.toString(), id2.toString()), Optional.of("TRUE"), "Обновление дружбы не прошло");
     }
 
     @Test
@@ -236,7 +236,7 @@ class UserControllerTests {
         System.out.println(user2);
         System.out.println(user3);
         System.out.println(userService.getUserStorage().findUserById("1"));
-        System.out.println(userService.getUserStorage().getFriendshipStorage().getFriendsId("1"));
+        System.out.println(userService.getFriendshipStorage().getFriendsId("1"));
         assertEquals(userService.getCommonFriends("1", "2").get(0), user3, "Некорректное получение списка общих друзей");
     }
 }

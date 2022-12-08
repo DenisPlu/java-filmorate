@@ -11,4 +11,12 @@ public interface FilmStorage {
     Optional<Film> create(Film film);
 
     Optional<Film> update(Film film);
+
+    Optional<Film> findFilmById(String id);
+
+    String addLike(String filmId, String userId);
+
+    List<Integer> getFilmsLikes(String id);
+
+    int removeLike(int filmId, int userId);
 }

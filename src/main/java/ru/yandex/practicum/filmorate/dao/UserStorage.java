@@ -14,4 +14,6 @@ public interface UserStorage {
     Optional<User> update(User user) throws ValidationException;
 
     Optional<User> findUserById(String id);
+
+    String delete(String id);
 }

@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.daoImplStorage;
 
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,19 +21,18 @@ import java.util.List;
 import java.util.Optional;
 
 @Component
-@Getter
 @RequiredArgsConstructor
 public class UserDbStorage implements UserStorage {
 
     private final Logger log = LoggerFactory.getLogger(UserDbStorage.class);
     private final JdbcTemplate jdbcTemplate;
     private final FriendshipStorage friendshipStorage;
-    private final String SELECT_ALL_USERS = "SELECT * FROM users";
-    private final String UPDATE_USER_BY_ID = "UPDATE users SET email = ?, login = ?, name = ?, birthday = ? WHERE id = ?";
-    private final String SELECT_USER_BY_ID = "SELECT id, email, login, name, birthday FROM users WHERE id = ?";
-    private final String DELETE_USER_BY_ID = "DELETE FROM employees WHERE id = ?";
+    private static final String SELECT_ALL_USERS = "SELECT * FROM users";
+    private static final String UPDATE_USER_BY_ID = "UPDATE users SET email = ?, login = ?, name = ?, birthday = ? WHERE id = ?";
+    private static final String SELECT_USER_BY_ID = "SELECT id, email, login, name, birthday FROM users WHERE id = ?";
+    private static final String DELETE_USER_BY_ID = "DELETE FROM employees WHERE id = ?";
 
-    public User mapRowToUser(ResultSet resultSet, int rowNum) throws SQLException {
+    private User mapRowToUser(ResultSet resultSet, int rowNum) throws SQLException {
         return User.builder()
                 .id(resultSet.getInt("id"))
                 .email(resultSet.getString("email"))
@@ -98,6 +96,7 @@ public class UserDbStorage implements UserStorage {
         }
     }
 
+    @Override
     public String delete(String id) {
         jdbcTemplate.update(DELETE_USER_BY_ID, id);
         return id;

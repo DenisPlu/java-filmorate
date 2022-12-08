@@ -29,8 +29,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 class FilmControllerTests {
 
-    public final FilmService filmService;
-    public final UserService userService;
+    final FilmService filmService;
+    final UserService userService;
 
     @Test
     @DirtiesContext
@@ -260,24 +260,24 @@ class FilmControllerTests {
                 .likes(new HashSet<>())
                 .build();
         filmService.getFilmStorage().create(film1);
-        assertEquals(filmService.getFilmStorage().getMpaStorage().getFilmMpaById("1").get(), Mpa.builder().id(1).name("G").build());
+        assertEquals(filmService.getMpaStorage().getFilmMpaById("1").get(), Mpa.builder().id(1).name("G").build());
     }
 
     @Test
     public void getFilmsMpa() {
-        assertEquals(filmService.getFilmStorage().getMpaStorage().getFilmsMpa().size(), 5);
+        assertEquals(filmService.getMpaStorage().getFilmsMpa().size(), 5);
     }
 
     @Test
     public void getFilmsGenre() {
-        assertEquals(filmService.getFilmStorage().getGenreStorage().getFilmsGenre().size(), 6);
+        assertEquals(filmService.getGenreStorage().getFilmsGenre().size(), 6);
     }
 
     @Test
     public void getFilmGenreById() {
         List listGenres = new ArrayList<>();
         listGenres.add(Genre.builder().id(1).name("Комедия").build());
-        assertEquals(filmService.getFilmStorage().getGenreStorage().getFilmGenreById("1").get(), listGenres.get(0));
+        assertEquals(filmService.getGenreStorage().getFilmGenreById("1").get(), listGenres.get(0));
     }
 
     @Test
@@ -291,6 +291,6 @@ class FilmControllerTests {
                 .likes(new HashSet<>())
                 .build();
         Integer id = filmService.getFilmStorage().create(film1).get().getId();
-        assertEquals(filmService.getFilmStorage().getGenreStorage().getFilmGenreByFilmId(id.toString()), listGenres);
+        assertEquals(filmService.getGenreStorage().getFilmGenreByFilmId(id.toString()), listGenres);
     }
 }

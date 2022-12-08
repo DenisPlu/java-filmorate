@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.daoImplStorage;
 
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,13 +16,12 @@ import java.sql.SQLException;
 import java.util.*;
 
 @Component
-@Getter
 @RequiredArgsConstructor
 public class MpaStorage implements MpaDao {
     private final Logger log = LoggerFactory.getLogger(FilmDbStorage.class);
     private final JdbcTemplate jdbcTemplate;
-    private final String SELECT_ALL_MPA = "SELECT * FROM mpa";
-    private final String SELECT_MPA_BY_ID = "SELECT id, name FROM mpa WHERE id = ?";
+    private static final String SELECT_ALL_MPA = "SELECT * FROM mpa";
+    private static final String SELECT_MPA_BY_ID = "SELECT id, name FROM mpa WHERE id = ?";
 
     private Mpa mapRowToMpa(ResultSet resultSet, int rowNum) throws SQLException {
         return Mpa.builder()

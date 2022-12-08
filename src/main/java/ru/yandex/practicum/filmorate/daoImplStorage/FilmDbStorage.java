@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.daoImplStorage;
 
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,25 +21,24 @@ import java.util.*;
 import java.util.stream.Stream;
 
 @Component
-@Getter
 @RequiredArgsConstructor
-public class FilmDbStorage implements FilmStorage {
+public class FilmDbStorage implements FilmStorage, PreparedStatementCreator {
     private final Logger log = LoggerFactory.getLogger(FilmDbStorage.class);
     private final JdbcTemplate jdbcTemplate;
     private final MpaStorage mpaStorage;
     private final GenreStorage genreStorage;
-    private final String SELECT_ALL_FILMS = "SELECT * FROM films";
-    private final String CREATE_FILM_BASE = "INSERT INTO films(name, description, releaseDate, duration, mpaID) " +
+    private static final String SELECT_ALL_FILMS = "SELECT * FROM films";
+    private static final String CREATE_FILM_BASE = "INSERT INTO films(name, description, releaseDate, duration, mpaID) " +
             "VALUES (?, ?, ?, ?, ?)";
-    private final String CREATE_FILM_GENRE = "INSERT INTO film_genre (filmID, genreID) VALUES (?, ?)";
-    private final String UPDATE_FILM_BASE =
+    private static final String CREATE_FILM_GENRE = "INSERT INTO film_genre (filmID, genreID) VALUES (?, ?)";
+    private static final String UPDATE_FILM_BASE =
             "UPDATE films SET name = ?, description = ?, releaseDate = ?, duration = ?, mpaID = ? WHERE id = ?";
-    private final String DELETE_FILM_GENRES = "DELETE FROM film_genre WHERE filmID = ?";
-    private final String UPDATE_FILM_GENRES = "INSERT INTO film_genre (filmID, genreID) VALUES (?, ?)";
-    private final String SELECT_FILM_BY_ID = "SELECT * FROM films WHERE id = ?";
-    private final String CREATE_FILM_LIKE = "INSERT INTO filmLikes (filmID, userID) VALUES (?, ?)";
-    private final String SELECT_FILM_LIKES_BY_ID = "SELECT userID FROM filmLikes WHERE filmID = ?";
-    private final String DELETE_FILM_LIKES_BY_USER_ID = "DELETE FROM filmLikes WHERE filmID = ? AND userID = ? ";
+    private static final String DELETE_FILM_GENRES = "DELETE FROM film_genre WHERE filmID = ?";
+    private static final String UPDATE_FILM_GENRES = "INSERT INTO film_genre (filmID, genreID) VALUES (?, ?)";
+    private static final String SELECT_FILM_BY_ID = "SELECT * FROM films WHERE id = ?";
+    private static final String CREATE_FILM_LIKE = "INSERT INTO filmLikes (filmID, userID) VALUES (?, ?)";
+    private static final String SELECT_FILM_LIKES_BY_ID = "SELECT userID FROM filmLikes WHERE filmID = ?";
+    private static final String DELETE_FILM_LIKES_BY_USER_ID = "DELETE FROM filmLikes WHERE filmID = ? AND userID = ? ";
 
     private Film mapRowToFilm(ResultSet resultSet, int rowNum) throws SQLException {
         return Film.builder()
@@ -115,6 +113,7 @@ public class FilmDbStorage implements FilmStorage {
         return findFilmById(film.getId().toString());
     }
 
+    @Override
     public Optional<Film> findFilmById(String id) {
         try {
             return Optional.ofNullable(jdbcTemplate.queryForObject(SELECT_FILM_BY_ID, this::mapRowToFilm, id));
@@ -123,17 +122,19 @@ public class FilmDbStorage implements FilmStorage {
         }
     }
 
+    @Override
     public String addLike(String filmId, String userId) {
-        getJdbcTemplate().update(CREATE_FILM_LIKE, filmId, userId);
+        jdbcTemplate.update(CREATE_FILM_LIKE, filmId, userId);
         Film updatedFilm = findFilmById(filmId).get();
         updatedFilm.setRate(getFilmsLikes(filmId).size());
         update(updatedFilm);
         return userId;
     }
 
-    private List<Integer> getFilmsLikes(String id) {
+    @Override
+    public List<Integer> getFilmsLikes(String id) {
         try {
-            SqlRowSet srs = getJdbcTemplate().queryForRowSet(SELECT_FILM_LIKES_BY_ID, id);
+            SqlRowSet srs = jdbcTemplate.queryForRowSet(SELECT_FILM_LIKES_BY_ID, id);
             int rowCount = 0;
             List<Integer> filmsLikes = new ArrayList<>();
             while (srs.next()) {
@@ -146,8 +147,14 @@ public class FilmDbStorage implements FilmStorage {
         }
     }
 
+    @Override
     public int removeLike(int filmId, int userId) {
-        getJdbcTemplate().update(DELETE_FILM_LIKES_BY_USER_ID, filmId, userId);
+        jdbcTemplate.update(DELETE_FILM_LIKES_BY_USER_ID, filmId, userId);
         return userId;
+    }
+
+    @Override
+    public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
+        return null;
     }
 }

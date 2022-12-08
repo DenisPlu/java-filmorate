@@ -57,6 +57,6 @@ public class UserController {
     @DeleteMapping(value = "/users/{id}/friends/{friendId}")
     public int deleteFriend(@PathVariable final int id, @PathVariable final int friendId) {
         log.debug("У пользователя c Id: {}, удален друг с Id: {}", id, friendId);
-        return userService.getUserStorage().getFriendshipStorage().removeFriend(id, friendId);
+        return userService.getFriendshipStorage().removeFriend(id, friendId);
     }
 }
